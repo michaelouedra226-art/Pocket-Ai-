@@ -1,0 +1,6 @@
+{
+  "name": "DeepSeek Hermes",
+  "description": "DeepSeek Hermes - Autonomous Multi-Provider AI Agent with local GGUF, ReAct reasoning, and MCP.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
