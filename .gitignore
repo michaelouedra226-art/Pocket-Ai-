@@ -22,4 +22,3 @@ key.properties
 android/key.properties
 *.jks
 *.keystore
-!debug.keystore

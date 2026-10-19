@@ -14,38 +14,41 @@
 - **Spécifications Android** :
   - **applicationId** : `com.deepseekhermes.app`
   - **Label Launcher** : `DeepSeek Hermes`
-  - **Dart Package** : `pocketstrike` (imports préservés)
-  - **Prérequis** : Flutter >= 3.29, Dart >= 3.12, Java 17, `minSdk 26`, `compileSdk 37`
+  - **Technologie** : Kotlin et Jetpack Compose
+  - **Prérequis** : JDK 17, Android SDK 36, `minSdk 26`, `targetSdk 36`
 
 ---
 
 ## 🛠️ Compilation locale
 
 ### 1. Prérequis
-- Flutter SDK (>= 3.29)
 - JDK 17 (Temurin recommandé)
-- Android SDK avec build-tools et plateformes installés
+- Android SDK avec la plateforme Android 36 et les build-tools 36 installés
+- Aucun téléchargement manuel de Gradle n'est requis : le wrapper `./gradlew` est fourni
 
 ### 2. Commandes de build
 
+Le build local utilise `debug.keystore` à la racine (le workflow CI le génère automatiquement). Si le fichier n'existe pas encore, créez-le une fois :
+
 ```bash
-# Résolution des dépendances
-flutter pub get
+keytool -genkeypair -v -keystore debug.keystore -storepass android \
+  -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+  -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+```
 
-# Analyse statique du code
-flutter analyze
+```bash
+# Exécuter les tests unitaires
+./gradlew :app:testDebugUnitTest
 
-# Compilation APK Release (Universel)
-flutter build apk --release
-# → Artefact généré : build/app/outputs/flutter-apk/app-release.apk
+# Compiler l'APK de débogage
+./gradlew :app:assembleDebug
+# → Artefact : app/build/outputs/apk/debug/app-debug.apk
 
-# Compilation APK Release optimisé (Split par ABI)
-flutter build apk --release --split-per-abi
-# → Artefact ARM64 : build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+# Compiler l'APK Release et l'Android App Bundle
+./gradlew :app:assembleRelease :app:bundleRelease
+# → Artefacts : app/build/outputs/apk/release/app-release.apk
+#               app/build/outputs/bundle/release/app-release.aab
 
-# Compilation Android App Bundle (AAB pour Google Play)
-flutter build appbundle --release
-# → Artefact généré : build/app/outputs/bundle/release/app-release.aab
 ```
 
 ---
@@ -94,7 +97,7 @@ storeFile=upload-keystore.jks
 Le workflow `.github/workflows/build-android.yml` automatise la compilation et la publication des livrables Android.
 
 ### Déclencheurs
-- **Automatique** : À la création d'un tag de version commençant par `v` (ex. `v1.0.0`).
+- **Automatique** : À chaque push ou pull request vers `main`, et à la création d'un tag commençant par `v` (ex. `v1.0.0`).
 - **Manuel** : Via le bouton *Run workflow* (`workflow_dispatch`) dans l'onglet **Actions** de GitHub.
 
 ### Secrets GitHub à configurer
@@ -108,14 +111,9 @@ Dans les paramètres de votre dépôt GitHub (**Settings > Secrets and variables
 | `KEY_PASSWORD` | Mot de passe de la clé privée |
 | `KEY_ALIAS` | Alias de la clé (ex: `upload`) |
 
-### Artefacts produits et renommés
+### Artefacts produits
 
-À chaque build, les livrables suivants sont générés dans le dossier `dist/` :
-- `DeepSeekHermes-<tag>-universal.apk` : APK universel compatible avec tous les appareils.
-- `DeepSeekHermes-<tag>-arm64.apk` : APK 64-bit optimisé pour les téléphones modernes.
-- `DeepSeekHermes-<tag>.aab` : Android App Bundle prêt pour le déploiement sur le Google Play Store.
-
-Les fichiers sont téléchargeables pendant 30 jours via **Actions > Artifacts** et attachés automatiquement à la **Release GitHub** lors du push d'un tag.
+À chaque build, les APK de débogage et de release ainsi que l'Android App Bundle sont téléversés dans **Actions > Artifacts** et conservés pendant 30 jours. Lors d'un push de tag `v*`, l'APK de release et l'AAB sont aussi attachés à la GitHub Release.
 
 ```bash
 # Exemple pour déclencher une release GitHub
